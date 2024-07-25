@@ -1,40 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 function MonBody() {
-    const [time, setTime] = useState(0);
-    const [timerOn, setTimerOn] = useState(false);
-    const [timerStopped, setTimerStopped] = useState(false);
+  const [time, setTime] = useState(0);
+  const [timerOn, setTimerOn] = useState(false);
+  const startTimeRef = useRef(0); // Référence pour stocker le temps de début
 
-    useEffect(() => {
-        let interval = null;
+  useEffect(() => {
+    let animationFrameId;
 
-        if (timerOn && !timerStopped) {
-            interval = setInterval(() => {
-                setTime(prevTime => prevTime + 10);
-            }, 10);
-        } else {
-            clearInterval(interval);
-        }
+    function updateTimer() {
+      if (timerOn) {
+        const currentTime = Date.now();
+        setTime(prevTime => prevTime + currentTime - startTimeRef.current);
+        startTimeRef.current = currentTime;
+        animationFrameId = requestAnimationFrame(updateTimer); // Demande la prochaine image
+      }
+    }
 
-        return () => clearInterval(interval);
-    }, [timerOn, timerStopped]);
+    if (timerOn) {
+      startTimeRef.current = Date.now(); // Initialiser le temps de début
+      animationFrameId = requestAnimationFrame(updateTimer); // Démarrer l'animation
+    }
 
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-300">
-            <h1 className="text-4xl font-bold text-gray-800 mb-8">Chrono</h1>
-            <div className="text-2xl font-mono text-gray-700">{(time / 1000).toFixed(2)}s</div>
-            <div className="space-x-4 mt-6">
-                <button className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200 shadow-xl" 
-                        onClick={() => !timerStopped && setTimerOn(true)}>Start</button>
-                <button className="px-6 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition duration-200 shadow-xl" 
-                        onClick={() => setTimerOn(false)}>Pause</button>
-                <button className="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200 shadow-xl" 
-                        onClick={() => { setTimerOn(false); setTimerStopped(true); }}>Stop</button>
-                <button className="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200 drop-shadow-xl" 
-                        onClick={() => { setTime(0); setTimerOn(true); setTimerStopped(false); }}>Restart</button>
-            </div>
-        </div>
-    );
+    return () => {
+      cancelAnimationFrame(animationFrameId); // Arrêter l'animation lors du démontage
+      startTimeRef.current = 0; // Réinitialiser le temps de début
+    };
+  }, [timerOn]); // Dépendance pour relancer l'effet si timerOn change
+
+  const handleStart = () => setTimerOn(true);
+  const handlePause = () => setTimerOn(false);
+  const handleStop = () => {
+    setTimerOn(false);
+    setTime(0);
+  };
+  const handleRestart = () => {
+    setTime(0);
+    setTimerOn(true);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-300">
+      <div className="text-2xl font-mono text-gray-700">
+        {((time || 0) / 1000).toFixed(2)}s
+      </div>
+      <div className="space-x-4 mt-6">
+        <button onClick={handleStart}>Commencer</button>
+        <button onClick={handlePause}>Pause</button>
+        <button onClick={handleStop}>Arrêt</button>
+        <button onClick={handleRestart}>Redémarrage</button>
+      </div>
+    </div>
+  );
 }
 
 export default MonBody;
