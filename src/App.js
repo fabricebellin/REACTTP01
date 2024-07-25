@@ -13,7 +13,7 @@ function App() {
         <MonBody />
       </div>
       <footer className="flex flex-col text-center">
-        <MonFooter nom="BELLIN" prenom="Fabrice" formation="M05-2024/2025" />
+        <MonFooter nom="BELLIN" prenom="Fabrice" session="Session : M05-2024/2025" />
       </footer>
     </div>
   );
